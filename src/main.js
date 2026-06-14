@@ -1,7 +1,9 @@
 import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import './style.css'
 import { createKurt, updateKurtEyes } from './kurt.js'
 import { createChild } from './child.js'
+import { playAhooga, resumeAudio } from './audio.js'
 import {
   UPGRADES, load, save, costOf, derive, targetKids,
 } from './state.js'
@@ -25,6 +27,19 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 app.appendChild(renderer.domElement)
+
+// Controles de cámara: el jugador gira/zoom a voluntad (sin rotación automática)
+const controls = new OrbitControls(camera, renderer.domElement)
+controls.target.set(0, 1.6, 0)
+controls.enableDamping = true
+controls.dampingFactor = 0.08
+controls.enablePan = false
+controls.minDistance = 4
+controls.maxDistance = 16
+controls.minPolarAngle = 0.2
+controls.maxPolarAngle = Math.PI * 0.49 // no pasar por debajo del piso
+controls.rotateSpeed = 0.9
+controls.update()
 
 // Luces
 scene.add(new THREE.HemisphereLight('#bcd0ff', '#20143a', 0.9))
@@ -96,6 +111,8 @@ const children = []
 // HUD
 // ---------------------------------------------------------------------------
 const elCandy = document.getElementById('candy')
+const elCandyBig = document.getElementById('candy-big')
+const candyCounterEl = document.getElementById('candy-counter')
 const elCps = document.getElementById('cps')
 const elKids = document.getElementById('kids')
 const shopList = document.getElementById('shop-list')
@@ -158,9 +175,19 @@ function buy(id) {
 }
 
 function updateHud() {
-  elCandy.textContent = fmt(state.candy)
+  const txt = fmt(state.candy)
+  elCandy.textContent = txt
+  if (elCandyBig) elCandyBig.textContent = txt
   elCps.textContent = fmt(cps)
   elKids.textContent = children.filter((c) => c.userData.arrived).length
+}
+
+// Animación de "pop" del contador grande (se llama al hacer click)
+function popCandyCounter() {
+  if (!candyCounterEl) return
+  candyCounterEl.classList.remove('pop')
+  void candyCounterEl.offsetWidth // reinicia la animación
+  candyCounterEl.classList.add('pop')
 }
 
 buildShop()
@@ -194,6 +221,7 @@ const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
 let squash = 0 // animación de "apretón" al click
 let firstClick = true
+let lastExcited = 0 // para detectar cuándo los ojos recién saltan
 
 function handlePointer(clientX, clientY) {
   pointer.x = (clientX / innerWidth) * 2 - 1
@@ -213,7 +241,10 @@ function clickKurt(x, y) {
     a.rotation.z = (i ? -1 : 1) * 1.4
   })
   spawnFloat(x, y, '+' + fmt(perClick))
+  // sonido cartoon (más agudo si está emocionado por los niños)
+  playAhooga(0.55 + lastExcited * 0.5)
   updateHud()
+  popCandyCounter()
   refreshShop()
   if (firstClick) { firstClick = false; hintEl.style.opacity = '0' }
   save(state)
@@ -229,7 +260,21 @@ function spawnFloat(x, y, text) {
   setTimeout(() => el.remove(), 1000)
 }
 
-renderer.domElement.addEventListener('pointerdown', (e) => handlePointer(e.clientX, e.clientY))
+// Click vs arrastre: solo cuenta como click si el puntero casi no se movió.
+// Así arrastrar para girar la cámara no genera caramelos.
+let downX = 0, downY = 0, dragging = false
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  downX = e.clientX
+  downY = e.clientY
+  dragging = false
+  resumeAudio() // desbloquear el audio con el primer gesto del usuario
+})
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) dragging = true
+})
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!dragging) handlePointer(e.clientX, e.clientY)
+})
 
 // ---------------------------------------------------------------------------
 // Bucle principal
@@ -265,6 +310,10 @@ function animate() {
   })
   const excited = Math.min(1, nearCount / 3)
   updateKurtEyes(kurt, excited, t)
+
+  // Sonido "ahooga" cuando los ojos saltan (flanco de subida de la emoción)
+  if (excited > 0.35 && lastExcited <= 0.35) playAhooga(0.8)
+  lastExcited = excited
 
   // Kurt: idle bob + squash al click + se gira hacia el niño más cercano
   squash = Math.max(0, squash - dt * 4)
@@ -311,12 +360,8 @@ function animate() {
     }
   })
 
-  // Cámara con leve órbita automática
-  const camR = 8.5
-  camera.position.x = Math.sin(t * 0.12) * camR
-  camera.position.z = Math.cos(t * 0.12) * camR
-  camera.position.y = 3.2
-  camera.lookAt(0, 1.6, 0)
+  // Cámara controlada por el jugador (sin rotación automática)
+  controls.update()
 
   // Guardado periódico
   accSave += dt

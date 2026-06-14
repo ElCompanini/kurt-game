@@ -77,6 +77,51 @@ canvas { display: block; touch-action: none; }
   transition: opacity .4s;
 }
 
+/* ---------- Contador grande de caramelos ---------- */
+#candy-counter {
+  position: fixed;
+  top: 84px; left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  padding: 10px 24px;
+  z-index: 12;
+  pointer-events: none;
+  box-shadow: 0 6px 24px rgba(0,0,0,.45);
+}
+#candy-counter .cc-icon { font-size: 30px; line-height: 1; }
+#candy-big {
+  font-size: 38px;
+  font-weight: bold;
+  color: var(--accent);
+  text-shadow: 0 2px 8px rgba(0,0,0,.5);
+  min-width: 1ch;
+}
+#candy-counter .cc-label {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+#candy-counter.pop { animation: candyPop .25s ease; }
+@keyframes candyPop {
+  0% { transform: translateX(-50%) scale(1); }
+  40% { transform: translateX(-50%) scale(1.12); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+@media (max-width: 720px) {
+  #candy-counter { top: 76px; padding: 8px 18px; }
+  #candy-big { font-size: 30px; }
+  #candy-counter .cc-icon { font-size: 24px; }
+  #candy-counter .cc-label { display: none; }
+}
+
 /* ---------- Shop ---------- */
 #shop {
   position: fixed;
