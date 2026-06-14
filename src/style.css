@@ -1,0 +1,154 @@
+:root {
+  --bg: #0f1226;
+  --panel: rgba(20, 24, 56, 0.82);
+  --accent: #ffd23f;
+  --accent2: #ff6b9d;
+  --good: #5ee7a0;
+  --text: #f4f6ff;
+  --muted: #aab0d8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app { position: fixed; inset: 0; }
+canvas { display: block; touch-action: none; }
+
+/* ---------- Topbar ---------- */
+#topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-eyes { font-size: 34px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
+.brand-text h1 {
+  font-size: 28px;
+  letter-spacing: 3px;
+  line-height: 1;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.brand-text p { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+#stats { display: flex; gap: 10px; }
+.stat {
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 8px 14px;
+  text-align: center;
+  min-width: 92px;
+}
+.stat-value { display: block; font-size: 20px; font-weight: bold; color: var(--accent); }
+.stat-label { font-size: 10px; color: var(--muted); }
+
+/* ---------- Hint ---------- */
+#hint {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  z-index: 10;
+  pointer-events: none;
+  transition: opacity .4s;
+}
+
+/* ---------- Shop ---------- */
+#shop {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 320px;
+  max-width: 86vw;
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(255,255,255,.1);
+  padding: 80px 16px 16px;
+  z-index: 20;
+  overflow-y: auto;
+  transform: translateX(0);
+  transition: transform .3s ease;
+}
+#shop.hidden { transform: translateX(100%); }
+#shop h2 { font-size: 18px; margin-bottom: 14px; letter-spacing: 1px; }
+
+.upgrade {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: transform .1s, border-color .2s, background .2s;
+}
+.upgrade:hover { border-color: var(--accent); }
+.upgrade:active { transform: scale(.98); }
+.upgrade.locked { opacity: .45; cursor: not-allowed; }
+.upgrade.afford { border-color: var(--good); }
+
+.up-top { display: flex; justify-content: space-between; align-items: baseline; }
+.up-name { font-size: 15px; font-weight: bold; }
+.up-lvl { font-size: 11px; color: var(--muted); }
+.up-desc { font-size: 11px; color: var(--muted); margin: 4px 0 8px; line-height: 1.4; }
+.up-cost { font-size: 13px; font-weight: bold; color: var(--accent); }
+.up-cost.cant { color: #ff7a7a; }
+
+#shop-toggle {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 21;
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+}
+
+/* ---------- Floating click text ---------- */
+.float {
+  position: fixed;
+  font-weight: bold;
+  font-size: 22px;
+  color: var(--accent);
+  pointer-events: none;
+  z-index: 15;
+  text-shadow: 0 2px 6px rgba(0,0,0,.6);
+  animation: floatUp 1s ease-out forwards;
+}
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(.6); opacity: 0; }
+  20% { opacity: 1; transform: translateY(-6px) scale(1.1); }
+  100% { transform: translateY(-70px) scale(1); opacity: 0; }
+}
+
+@media (max-width: 720px) {
+  .brand-text p { display: none; }
+  .stat { min-width: 70px; padding: 6px 8px; }
+  .stat-value { font-size: 16px; }
+  #stats { gap: 6px; }
+}
